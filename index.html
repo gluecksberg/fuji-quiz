@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>フジニッチグッズクイズ</title>
+<style>
+  :root {
+    --ink: #23241f;
+    --paper: #f6f3ec;
+    --card: #fffdf8;
+    --accent: #6b4a9c;
+    --accent-soft: #e7ddf3;
+    --wrong: #b3432b;
+    --wrong-soft: #f6ded6;
+    --gold: #c98a2b;
+    --gold-soft: #f5e6c8;
+    --line: #d8d2c2;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body { height: 100%; margin: 0; }
+
+  body {
+    font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    min-height: 100dvh;
+  }
+
+  .app { width: 100%; max-width: 640px; }
+
+  .eyebrow {
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 6px;
+    min-height: 16px;
+  }
+
+  .progress-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--line);
+    overflow: hidden;
+    margin: 14px 0 28px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 32px 28px;
+    box-shadow: 0 1px 2px rgba(35,36,31,0.04);
+  }
+
+  .question {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 0 0 26px;
+  }
+
+  .choices { display: flex; flex-direction: column; gap: 12px; }
+
+  button.choice {
+    font-family: inherit;
+    font-size: 17px;
+    text-align: left;
+    padding: 16px 18px;
+    min-height: 56px;
+    border-radius: 14px;
+    border: 1.5px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  }
+  button.choice:active { transform: scale(0.98); }
+
+  button.choice .letter {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  button.choice.correct { border-color: var(--accent); background: var(--accent-soft); }
+  button.choice.correct .letter { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.choice.wrong { border-color: var(--wrong); background: var(--wrong-soft); }
+  button.choice.wrong .letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+  button.choice:disabled { cursor: default; }
+
+  .feedback-panel {
+    margin-top: 20px;
+    padding: 18px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .feedback-panel.is-correct { background: var(--accent-soft); }
+  .feedback-panel.is-wrong { background: var(--wrong-soft); }
+  .feedback-panel svg { flex: 0 0 auto; width: 56px; height: 56px; }
+  .feedback-text { flex: 1; }
+  .feedback-title {
+    font-size: 15px;
+    font-weight: 800;
+    margin: 0 0 4px;
+  }
+  .feedback-panel.is-correct .feedback-title { color: var(--accent); }
+  .feedback-panel.is-wrong .feedback-title { color: var(--wrong); }
+  .feedback-text p { margin: 0; font-size: 14px; line-height: 1.6; color: #55564c; }
+
+  .footer-row { margin-top: 24px; display: flex; justify-content: flex-end; }
+
+  button.next {
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 12px 22px;
+    border-radius: 999px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  button.next.show { opacity: 1; pointer-events: auto; }
+  button.next:active { transform: scale(0.97); }
+
+  /* Cover screen */
+  .cover { text-align: center; padding: 12px 4px 4px; }
+  .cover svg { width: 180px; height: 180px; margin: 0 auto 12px; display: block; }
+  .cover h1 {
+    font-size: 24px;
+    line-height: 1.5;
+    margin: 0 0 10px;
+    font-weight: 800;
+  }
+  .cover p { color: #55564c; font-size: 14px; margin: 0 0 26px; }
+  button.start, button.restart {
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px 30px;
+    border-radius: 999px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  button.start:active, button.restart:active { transform: scale(0.97); }
+
+  /* Result / celebrate screens */
+  .result { text-align: center; padding: 8px 0 4px; }
+  .result svg { width: 150px; height: 150px; margin: 0 auto 8px; display: block; }
+  .result .score { font-size: 44px; font-weight: 800; color: var(--accent); margin: 4px 0 8px; }
+  .result p.msg { color: #55564c; font-size: 15px; margin: 0 0 22px; }
+  .result.celebrate .score { color: var(--gold); }
+  .result.celebrate h2 {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--gold);
+    margin: 4px 0 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="eyebrow" id="eyebrow"></div>
+  <div class="progress-track" id="progressTrack" style="display:none;"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+  // ここに問題を書き換えれば、そのまま自分のクイズになります。
+  // correct には choices 配列内の「正解の添字（0,1,2）」を入れます。
+  const QUESTIONS = [
+    {
+      question: "日本で一番面積の大きい都道府県は？",
+      choices: ["北海道", "岩手県", "福島県"],
+      correct: 0,
+      explain: "北海道は日本の総面積の約22%を占めています。"
+    },
+    {
+      question: "human と humane の意味の違いに近いのは？",
+      choices: ["同じ意味", "humane は「人間らしい」ではなく「思いやりがある」", "human は形容詞専用"],
+      correct: 1,
+      explain: "humane は human から派生し「思いやりのある・人道的な」という意味です。"
+    },
+    {
+      question: "HTMLでボタンを作るタグは？",
+      choices: ["<button>", "<click>", "<press>"],
+      correct: 0,
+      explain: "<button> 要素が標準的なクリック可能な部品です。"
+    },
+    {
+      question: "1リットルは何ミリリットル？",
+      choices: ["100ml", "1000ml", "10000ml"],
+      correct: 1,
+      explain: "1L = 1000mL です。"
+    },
+    {
+      question: "iPadでこのファイルを配布するのに向かない方法は？",
+      choices: ["iCloud Driveのリンク共有", "Safariで直接開く", "紙に印刷して配る"],
+      correct: 2,
+      explain: "インタラクティブなクイズなので、印刷では動作しません。"
+    }
+  ];
+
+  const INACTIVITY_LIMIT_MS = 3 * 60 * 1000; // 3分
+  const letters = ["A", "B", "C"];
+
+  let current = 0;
+  let score = 0;
+  let inactivityTimer = null;
+
+  const card = document.getElementById("card");
+  const eyebrow = document.getElementById("eyebrow");
+  const progressTrack = document.getElementById("progressTrack");
+  const progressFill = document.getElementById("progressFill");
+
+  /* ---------- イラスト（SVG） ---------- */
+
+  function iconGiftBox() {
+    return `
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="92" fill="#e7ddf3"/>
+      <circle cx="46" cy="52" r="5" fill="#c98a2b"/>
+      <circle cx="158" cy="60" r="4" fill="#b3432b"/>
+      <circle cx="150" cy="150" r="5" fill="#6b4a9c"/>
+      <circle cx="42" cy="140" r="4" fill="#c98a2b"/>
+      <rect x="52" y="96" width="96" height="70" rx="6" fill="#fffdf8" stroke="#6b4a9c" stroke-width="4"/>
+      <rect x="52" y="96" width="96" height="22" fill="#6b4a9c"/>
+      <rect x="92" y="96" width="16" height="70" fill="#c98a2b"/>
+      <path d="M100 96c-10-18-34-20-34-4 0 10 16 4 34 4z" fill="#c98a2b"/>
+      <path d="M100 96c10-18 34-20 34-4 0 10-16 4-34 4z" fill="#c98a2b"/>
+    </svg>`;
+  }
+
+  function iconTrophy() {
+    return `
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="92" fill="#f5e6c8"/>
+      <path d="M70 40h60v40c0 20-13 34-30 34s-30-14-30-34V40z" fill="#c98a2b"/>
+      <path d="M70 48c-14 0-24 10-24 22s10 20 22 22l2-14c-6-2-10-6-10-10 0-6 5-11 12-12l-2-8z" fill="#c98a2b"/>
+      <path d="M130 48c14 0 24 10 24 22s-10 20-22 22l-2-14c6-2 10-6 10-10 0-6-5-11-12-12l2-8z" fill="#c98a2b"/>
+      <rect x="92" y="112" width="16" height="20" fill="#c98a2b"/>
+      <rect x="76" y="132" width="48" height="10" rx="3" fill="#c98a2b"/>
+      <rect x="64" y="142" width="72" height="12" rx="4" fill="#6b4a9c"/>
+      <circle cx="46" cy="54" r="4" fill="#6b4a9c"/>
+      <circle cx="156" cy="58" r="4" fill="#b3432b"/>
+      <circle cx="150" cy="150" r="4" fill="#6b4a9c"/>
+    </svg>`;
+  }
+
+  function iconCorrect() {
+    return `
+    <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="40" r="38" fill="#6b4a9c"/>
+      <path d="M24 41l11 11 21-23" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  }
+
+  function iconWrong() {
+    return `
+    <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="40" r="38" fill="#b3432b"/>
+      <path d="M28 28l24 24M52 28L28 52" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  /* ---------- 画面描画 ---------- */
+
+  function renderCover() {
+    stopInactivityTimer();
+    eyebrow.textContent = "";
+    progressTrack.style.display = "none";
+    card.innerHTML = `
+      <div class="cover">
+        <img src="cover-illustration.png" alt="フジニッチグッズ" style="width:220px;height:220px;object-fit:contain;margin:0 auto 12px;display:block;">
+        <h1>クイズに挑戦して<br>フジニッチグッズをもらおう！</h1>
+        <p>全${QUESTIONS.length}問、正解すると豪華グッズが当たります。</p>
+        <button class="start" id="startBtn">はじめる</button>
+      </div>
+    `;
+  }
+
+  function renderQuestion() {
+    startInactivityTimer();
+    const q = QUESTIONS[current];
+    eyebrow.textContent = `問題 ${current + 1} / ${QUESTIONS.length}`;
+    progressTrack.style.display = "block";
+    progressFill.style.width = `${(current / QUESTIONS.length) * 100}%`;
+
+    card.innerHTML = `
+      <p class="question">${q.question}</p>
+      <div class="choices" id="choicesWrap"></div>
+      <div id="feedbackWrap"></div>
+      <div class="footer-row">
+        <button class="next" id="nextBtn">${current === QUESTIONS.length - 1 ? "結果を見る →" : "次の問題 →"}</button>
+      </div>
+    `;
+
+    const wrap = document.getElementById("choicesWrap");
+    q.choices.forEach((choiceText, i) => {
+      const btn = document.createElement("button");
+      btn.className = "choice";
+      btn.innerHTML = `<span class="letter">${letters[i]}</span><span>${choiceText}</span>`;
+      btn.addEventListener("click", () => selectAnswer(i));
+      wrap.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(i) {
+    resetInactivityTimer();
+    const q = QUESTIONS[current];
+    const buttons = document.querySelectorAll("#choicesWrap .choice");
+    buttons.forEach((b, idx) => {
+      b.disabled = true;
+      if (idx === q.correct) b.classList.add("correct");
+      else if (idx === i) b.classList.add("wrong");
+    });
+
+    const isCorrect = i === q.correct;
+    if (isCorrect) score++;
+
+    const feedbackWrap = document.getElementById("feedbackWrap");
+    feedbackWrap.innerHTML = `
+      <div class="feedback-panel ${isCorrect ? "is-correct" : "is-wrong"}">
+        ${isCorrect ? iconCorrect() : iconWrong()}
+        <div class="feedback-text">
+          <p class="feedback-title">${isCorrect ? "正解！" : "不正解"}</p>
+          <p>${isCorrect ? q.explain : `正解は「${q.choices[q.correct]}」。${q.explain}`}</p>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("nextBtn").classList.add("show");
+  }
+
+  function renderResult() {
+    stopInactivityTimer();
+    eyebrow.textContent = "結果";
+    progressTrack.style.display = "block";
+    progressFill.style.width = "100%";
+
+    const perfect = score === QUESTIONS.length;
+
+    if (perfect) {
+      card.innerHTML = `
+        <div class="result celebrate">
+          <img src="celebrate-illustration.png" alt="フジニッチ 大喜び" style="width:200px;height:200px;object-fit:contain;margin:0 auto 8px;display:block;">
+          <h2>おめでとう！グッズ獲得</h2>
+          <div class="score">${score} / ${QUESTIONS.length}</div>
+          <p class="msg">全問正解です。フジニッチグッズをお受け取りください。</p>
+          <button class="restart" id="restartBtn">もう一度挑戦する</button>
+        </div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div class="result">
+          <img src="incomplete-illustration.png" alt="フジニッチ 困惑" style="width:180px;height:180px;object-fit:contain;margin:0 auto 8px;display:block;">          <div class="score">${score} / ${QUESTIONS.length}</div>
+          <p class="msg">お疲れさまでした。全問正解でグッズがもらえます。</p>
+          <button class="restart" id="restartBtn">もう一度挑戦する</button>
+        </div>
+      `;
+    }
+  }
+
+  /* ---------- イベント ---------- */
+
+  document.addEventListener("click", (e) => {
+    if (e.target && e.target.id === "startBtn") {
+      current = 0;
+      score = 0;
+      renderQuestion();
+    }
+    if (e.target && e.target.id === "nextBtn") {
+      current++;
+      if (current < QUESTIONS.length) {
+        renderQuestion();
+      } else {
+        renderResult();
+      }
+    }
+    if (e.target && e.target.id === "restartBtn") {
+      renderCover();
+    }
+  });
+
+  /* ---------- 3分間無操作でトップに戻る ---------- */
+
+  function startInactivityTimer() {
+    stopInactivityTimer();
+    inactivityTimer = setTimeout(() => {
+      current = 0;
+      score = 0;
+      renderCover();
+    }, INACTIVITY_LIMIT_MS);
+  }
+
+  function resetInactivityTimer() {
+    if (inactivityTimer) startInactivityTimer();
+  }
+
+  function stopInactivityTimer() {
+    if (inactivityTimer) {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = null;
+    }
+  }
+
+  ["click", "touchstart", "keydown"].forEach(evt => {
+    document.addEventListener(evt, () => {
+      if (inactivityTimer) resetInactivityTimer();
+    });
+  });
+
+  renderCover();
+</script>
+
+</body>
+</html>
