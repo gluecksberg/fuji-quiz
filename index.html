@@ -380,15 +380,15 @@
           <img src="celebrate-illustration.png" alt="フジニッチ 大喜び" style="width:200px;height:200px;object-fit:contain;margin:0 auto 8px;display:block;">
           <h2>おめでとう！グッズ獲得</h2>
           <div class="score">${score} / ${QUESTIONS.length}</div>
-          <p class="msg">全問正解です。フジニッチグッズをお受け取りください。</p>
-          <button class="restart" id="restartBtn">もう一度挑戦する</button>
+          <p class="msg">全問正解です！この画面をスタッフに見せてフジニッチグッズをお受け取りください。</p>
+          <button class="restart" id="restartBtn">トップに戻る</button>
         </div>
       `;
     } else {
       card.innerHTML = `
         <div class="result">
           <img src="incomplete-illustration.png" alt="フジニッチ 困惑" style="width:180px;height:180px;object-fit:contain;margin:0 auto 8px;display:block;">          <div class="score">${score} / ${QUESTIONS.length}</div>
-          <p class="msg">お疲れさまでした。全問正解でグッズがもらえます。</p>
+          <p class="msg">残念。全問正解を目指してもう一度挑戦しよう！</p>
           <button class="restart" id="restartBtn">もう一度挑戦する</button>
         </div>
       `;
